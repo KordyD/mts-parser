@@ -1,6 +1,6 @@
 import puppeteer from 'puppeteer';
 
-const parser = async () => {
+export const parser = async () => {
   const browser = await puppeteer.launch({ headless: 'new' });
   const page = await browser.newPage();
   await page.goto(
@@ -34,9 +34,7 @@ const parser = async () => {
       benefits: card.querySelector('.benefits-description')?.textContent,
     }))
   );
-  console.log(cards);
-
   await browser.close();
-};
 
-parser();
+  return cards;
+};
