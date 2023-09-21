@@ -1,40 +1,47 @@
-import puppeteer from 'puppeteer';
+import { parser } from './parser.js';
+import { startMongo } from './database.js';
+import express from 'express';
 
-export const parser = async () => {
-  const browser = await puppeteer.launch({ headless: 'new' });
-  const page = await browser.newPage();
-  await page.goto(
-    'https://moskva.mts.ru/personal/mobilnaya-svyaz/tarifi/vse-tarifi/mobile-tv-inet'
-  );
+const app = express();
+const port = 3001;
 
-  const buttonSelector = 'button.btn_secondary';
-
-  await page.waitForSelector(buttonSelector);
-  await page.waitForSelector('.card-title__link');
-  await page.click(buttonSelector);
-  await page.waitForSelector('text/KION');
-
-  const cards = await page.$$eval('mts-tariff-card', (cards) =>
-    cards.map((card) => ({
-      title: card.querySelector('.card-title__link').textContent,
-      description: card.querySelector('.card-description')?.textContent,
-      price:
-        card.querySelectorAll('.price-main > .price-text')[0].textContent +
-        ' ' +
-        card.querySelectorAll('.price-main > .price-text')[1].textContent,
-      priceSale: card.querySelectorAll('.price-sale > .price-text')[0]
-        ? card.querySelectorAll('.price-sale > .price-text')[0].textContent +
-          ' ' +
-          card.querySelectorAll('.price-sale > .price-text')[1].textContent
-        : undefined,
-      priceAnnotation: card.querySelector('.price-annotation')?.textContent,
-      features: Array.from(card.querySelectorAll('.feature-description')).map(
-        (el) => el.textContent
-      ),
-      benefits: card.querySelector('.benefits-description')?.textContent,
-    }))
-  );
-  await browser.close();
-
-  return cards;
+const clearCollection = async (client) => {
+  try {
+    await client.db().dropCollection('tariffs');
+    await client.db().createCollection('tariffs');
+    return client.db().collection('tariffs');
+  } catch (error) {
+    console.log(error);
+  }
 };
+
+const insertData = async (collection) => {
+  try {
+    const data = await parser();
+    await collection.insertMany(data);
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+const getData = async (collection) => {
+  try {
+    return await collection.find().toArray();
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+const mongo = startMongo();
+
+app.get('/api/tariffs', async (req, res) => {
+  const client = await mongo;
+  const collection = await clearCollection(client);
+  await insertData(collection);
+  const data = await getData(collection);
+  res.send(data);
+});
+
+app.listen(port, () => {
+  console.log(`Server started on ${port} port`);
+});
