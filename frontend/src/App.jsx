@@ -1,35 +1,63 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useEffect, useState } from 'react';
+import './App.css';
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [tariffs, setTariffs] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const getData = async () => {
+    const response = await fetch('http://localhost:3001/api/tariffs');
+    const data = await response.json();
+    return data;
+  };
+  const parseData = async () => {
+    const response = await fetch('http://localhost:3001/api/tariffs', {
+      method: 'POST',
+    });
+    const data = await response.json();
+    return data;
+  };
+
+  const handleClick = () => {
+    setLoading(true);
+    console.log(loading);
+    parseData().then((data) => {
+      setTariffs(data);
+      setLoading(false);
+    });
+  };
+
+  useEffect(() => {
+    setLoading(true);
+    getData().then((data) => {
+      setTariffs(data);
+      setLoading(false);
+    });
+    setLoading(false);
+  }, []);
 
   return (
     <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
+      {loading ? (
+        <h1>Загрузка...</h1>
+      ) : (
+        tariffs.map((item) => (
+          <div key={item._id}>
+            <h3>{item.title}</h3>
+            <p>{item.description}</p>
+            <ul>
+              {item.features.map((item, index) => (
+                <li key={index}>{item}</li>
+              ))}
+            </ul>
+            <p>{item.price}</p>
+            <p>{item.benefits}</p>
+          </div>
+        ))
+      )}
+      <button onClick={handleClick}>Парсить!</button>
     </>
-  )
+  );
 }
 
-export default App
+export default App;
