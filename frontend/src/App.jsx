@@ -33,7 +33,6 @@ function App() {
       setTariffs(data);
       setLoading(false);
     });
-    setLoading(false);
   }, []);
 
   return (
