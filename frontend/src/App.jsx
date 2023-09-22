@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import './App.css';
+import styles from './App.module.css';
 
 function App() {
   const [tariffs, setTariffs] = useState([]);
@@ -37,26 +37,30 @@ function App() {
   }, []);
 
   return (
-    <>
+    <div className={styles.wrapper}>
       {loading ? (
         <h1>Загрузка...</h1>
       ) : (
-        tariffs.map((item) => (
-          <div key={item._id}>
-            <h3>{item.title}</h3>
-            <p>{item.description}</p>
-            <ul>
-              {item.features.map((item, index) => (
-                <li key={index}>{item}</li>
-              ))}
-            </ul>
-            <p>{item.price}</p>
-            <p>{item.benefits}</p>
-          </div>
-        ))
+        <div className={styles.wrapper__cards}>
+          {tariffs.map((item) => (
+            <div key={item._id} className={styles.card}>
+              <h3>{item.title}</h3>
+              <p>{item.description}</p>
+              <ul style={{ listStyle: 'none' }}>
+                {item.features.map((item, index) => (
+                  <li key={index}>{item}</li>
+                ))}
+              </ul>
+              <p>{item.price}</p>
+              <p>{item.benefits}</p>
+            </div>
+          ))}
+        </div>
       )}
-      <button onClick={handleClick}>Парсить!</button>
-    </>
+      <button className={styles.button__parse} onClick={handleClick}>
+        Парсить!
+      </button>
+    </div>
   );
 }
 
